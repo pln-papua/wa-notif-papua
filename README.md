@@ -93,10 +93,6 @@ npm run typecheck  # cek TypeScript tanpa compile
 # Build + start sekaligus
 npm run deploy
 
-# Atau step by step
-npm run build
-npm run pm2:start
-
 # Daftarkan agar otomatis start saat server reboot
 pm2 save
 pm2 startup        # ikuti instruksi yang muncul
