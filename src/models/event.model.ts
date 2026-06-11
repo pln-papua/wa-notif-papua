@@ -1,7 +1,7 @@
 export interface ScadaEvent {
   id: number;
-  description: string;  // raw: "REC_SANOBA, 42.KOTA1.F01.Z02:GFR:0.0:0.0:0.0:0.0"
-  message: string;      // from scada_alarm.event: CB_TRIP, CB_CLOSE, CB_OPEN, etc.
+  description: string;   // raw: "REC_SANOBA, 42.KOTA1.F01.Z02:GFR:0.0:0.0:0.0:0.0"
+  message: string | null; // from scada_alarm.event: CB_TRIP, CB_CLOSE, CB_OPEN, etc.
   timestamp: Date;
 }
 
@@ -25,15 +25,18 @@ const PEMELIHARAAN_PREFIXES = ['CB_OPEN', 'PMCB_OPEN', 'LBS_OPEN', 'REC_OPEN'] a
 const GANGGUAN_PREFIXES     = ['CB_TRIP', 'PMCB_TRIP', 'LBS_TRIP', 'REC_TRIP'] as const;
 const CLOSE_PREFIXES        = ['CB_CLOSE', 'PMCB_CLOSE', 'LBS_CLOSE', 'REC_CLOSE'] as const;
 
-export function isPemeliharaanEvent(message: string): boolean {
+export function isPemeliharaanEvent(message: string | null): boolean {
+  if (!message) return false;
   return PEMELIHARAAN_PREFIXES.some((p) => message.startsWith(p));
 }
 
-export function isGangguanEvent(message: string): boolean {
+export function isGangguanEvent(message: string | null): boolean {
+  if (!message) return false;
   return GANGGUAN_PREFIXES.some((p) => message.startsWith(p));
 }
 
-export function isCloseEvent(message: string): boolean {
+export function isCloseEvent(message: string | null): boolean {
+  if (!message) return false;
   return CLOSE_PREFIXES.some((p) => message.startsWith(p));
 }
 

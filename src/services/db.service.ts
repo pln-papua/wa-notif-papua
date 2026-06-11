@@ -8,7 +8,7 @@ export async function getPollerLastId(): Promise<number> {
   const [rows] = await pool.execute<RowDataPacket[]>(
     'SELECT last_event_id FROM poller_state WHERE id = 1',
   );
-  const lastId = Number((rows[0] as RowDataPacket)['last_event_id']) ?? 0;
+  const lastId = Number((rows[0] as RowDataPacket | undefined)?.['last_event_id']) || 0;
   console.log(`[DB] getPollerLastId → ${lastId}`);
   return lastId;
 }

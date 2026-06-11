@@ -156,7 +156,7 @@ export function buildRekapGangguan(
   const lines: string[] = [
     header(sendDate),
     `Info rekap gangguan H-1`,
-    `${formatTanggal(refDate).replace(',', '').split(' ').slice(0, 1)[0]}, ${
+    `${formatTanggal(refDate).replace(',', '').split(' ')[0] ?? ''}, ${
       refDate.toLocaleDateString('id-ID', { day: '2-digit', month: '2-digit', year: 'numeric' }).replace(/\//g, '/')
     }`,
     `UP3 ${up3}`,
