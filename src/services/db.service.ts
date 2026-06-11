@@ -23,8 +23,8 @@ export async function advancePollerLastId(lastId: number): Promise<void> {
 
 export async function getEventsSinceId(lastId: number): Promise<ScadaEvent[]> {
   const [rows] = await pool.execute<RowDataPacket[]>(
-    `SELECT id, description, message, timestamp
-     FROM event
+    `SELECT id, description, event AS message, timestamp
+     FROM scada_alarm
      WHERE id > ?
      ORDER BY id ASC
      LIMIT 500`,
@@ -34,13 +34,13 @@ export async function getEventsSinceId(lastId: number): Promise<ScadaEvent[]> {
   return rows as ScadaEvent[];
 }
 
-export async function getAsetByCode(code: string): Promise<Aset | null> {
+export async function getAsetByCode(apktcode: string): Promise<Aset | null> {
   const [rows] = await pool.execute<RowDataPacket[]>(
-    'SELECT * FROM aset WHERE code = ? LIMIT 1',
-    [code],
+    'SELECT * FROM aset WHERE apktcode = ? LIMIT 1',
+    [apktcode],
   );
   const found = rows.length > 0;
-  console.log(`[DB] getAsetByCode(${code}) → ${found ? 'found' : 'NOT FOUND'}`);
+  console.log(`[DB] getAsetByCode(${apktcode}) → ${found ? 'found' : 'NOT FOUND'}`);
   return found ? (rows[0] as Aset) : null;
 }
 
@@ -126,10 +126,10 @@ export async function getGangguanByDateAndUp3(
   endDate: Date,
 ): Promise<NotifLog[]> {
   const [rows] = await pool.execute<RowDataPacket[]>(
-    `SELECT nl.*, a.up3, a.ulp, a.name, a.type AS aset_type, a.zona, a.section,
-            a.load, a.pelanggan
+    `SELECT nl.*, a.up3, a.ulp, a.nama AS name, a.aset AS aset_type, a.zona, a.section,
+            a.beban AS load, a.pelanggan
      FROM notif_log nl
-     JOIN aset a ON a.code = nl.description
+     JOIN aset a ON a.apktcode = nl.description
      WHERE a.up3 = ?
        AND nl.type = 'gangguan'
        AND nl.time_off BETWEEN ? AND ?

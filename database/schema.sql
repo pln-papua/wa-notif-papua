@@ -4,36 +4,41 @@
 
 -- Tabel aset: data master PMT/CB per UP3
 CREATE TABLE IF NOT EXISTS aset (
-  id         INT AUTO_INCREMENT PRIMARY KEY,
-  code       VARCHAR(100) NOT NULL UNIQUE,  -- 42.GISKY.F01.Z01
-  up3        VARCHAR(50)  NOT NULL,          -- JAYAPURA
-  ulp        VARCHAR(50)  NOT NULL,          -- ABEPURA
-  `source`   VARCHAR(50)  NOT NULL,          -- GI SKYLINE
-  `name`     VARCHAR(100) NOT NULL,          -- GARUDA
-  zona       VARCHAR(10)  NOT NULL,          -- 01
-  section    VARCHAR(10)  NOT NULL DEFAULT '00',
-  `type`     VARCHAR(20)  NOT NULL,          -- FEEDER / PENYULANG
-  unit       VARCHAR(20)  NOT NULL,          -- CB / PMCB / LBS / REC
-  `load`     INT          NOT NULL DEFAULT 0,
-  pelanggan  INT          NOT NULL DEFAULT 0,
-  INDEX idx_code (code),
-  INDEX idx_up3  (up3)
+  id         BIGINT AUTO_INCREMENT PRIMARY KEY,
+  apktcode   VARCHAR(30)  NOT NULL UNIQUE,  -- 42.KOTA1.F01.Z01
+  up3        VARCHAR(20)  NOT NULL,          -- NABIRE
+  ulp        VARCHAR(20)  NOT NULL,          -- NABIRE KOTA
+  aset       VARCHAR(15)  NOT NULL,          -- FEEDER / ZONA / SECTION
+  nama       VARCHAR(50)  NOT NULL,          -- FEEDER MERBAU
+  feeder     VARCHAR(15)  NOT NULL,          -- MERBAU
+  zona       VARCHAR(10)  DEFAULT NULL,      -- 1, 2 (NULL untuk level FEEDER)
+  section    VARCHAR(10)  DEFAULT NULL,      -- 1, MNV1 (NULL untuk level FEEDER/ZONA)
+  beban      VARCHAR(10)  DEFAULT NULL,        -- kW
+  pelanggan  VARCHAR(10)  DEFAULT NULL,
+  INDEX idx_apktcode (apktcode),
+  INDEX idx_up3      (up3)
 );
 
--- Tabel event: data event dari SCADA (Powerscene/Survalent)
+-- Tabel scada_alarm: data alarm dari SCADA (Powerscene/Survalent)
 -- Script hanya membaca tabel ini; SCADA yang mengisi.
 -- Tidak ada kolom processed — posisi baca dilacak via poller_state.
-CREATE TABLE IF NOT EXISTS event (
-  id          INT AUTO_INCREMENT PRIMARY KEY,
-  description VARCHAR(100) NOT NULL,   -- 42.GISKY.F01.Z01
-  message     VARCHAR(200) NOT NULL,   -- CB OPEN / OCR ON / AMF;300;23;24;250
-  timestamp   DATETIME(3)  NOT NULL
-  -- Tidak ada secondary index: query poller hanya pakai PK (id > last_id)
-  -- sehingga clustered index cukup. Menambah index di sini hanya membebani INSERT dari SCADA.
-);
+-- Format kolom description: "DEVICE_NAME, 42.KOTA1.F01.Z02" atau
+--   "DEVICE_NAME, 42.KOTA1.F01.Z02:FAULTTYPE:AMFR:AMFS:AMFT:AMFN"
+-- Format kolom event: CB_TRIP, CB_OPEN, CB_CLOSE, CB_CLOSE Manually Inputted, dst.
+-- CREATE TABLE scada_alarm (
+--   id          BIGINT AUTO_INCREMENT PRIMARY KEY,
+--   pid         BIGINT NOT NULL DEFAULT 0,
+--   type        INT NOT NULL,
+--   origin      VARCHAR(50),
+--   description VARCHAR(200),
+--   value       INT,
+--   event       VARCHAR(100),
+--   timestamp   DATETIME(3)
+--   -- ... kolom lain diisi SCADA
+-- );
 
 -- Tabel poller_state: menyimpan posisi baca terakhir (bookmark ID)
--- Selalu hanya 1 baris (id=1). Query event menggunakan WHERE id > last_event_id
+-- Selalu hanya 1 baris (id=1). Query scada_alarm menggunakan WHERE id > last_event_id
 -- sehingga scan selalu pada primary key (clustered index) — efisien meski data besar.
 CREATE TABLE IF NOT EXISTS poller_state (
   id            INT     PRIMARY KEY DEFAULT 1,
@@ -44,7 +49,7 @@ INSERT IGNORE INTO poller_state (id, last_event_id) VALUES (1, 0);
 -- Tabel notif_log: rekaman notifikasi yang sudah dikirim
 CREATE TABLE IF NOT EXISTS notif_log (
   id              INT AUTO_INCREMENT PRIMARY KEY,
-  description     VARCHAR(100)                   NOT NULL,
+  description     VARCHAR(100)                   NOT NULL,  -- apktcode dari aset
   type            ENUM('gangguan','pemeliharaan') NOT NULL,
   event_id_open   INT                            NOT NULL,
   event_id_close  INT                            DEFAULT NULL,

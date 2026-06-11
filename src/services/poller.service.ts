@@ -6,8 +6,7 @@ import {
   isPemeliharaanEvent,
   isGangguanEvent,
   isCloseEvent,
-  isAmfEvent,
-  parseAmfMessage,
+  parseAlarmDescription,
   type ScadaEvent,
 } from '../models/event.model';
 
@@ -17,22 +16,23 @@ async function processPemeliharaanEvents(events: ScadaEvent[]): Promise<void> {
   const pemEvents = events.filter((e) => isPemeliharaanEvent(e.message));
 
   for (const event of pemEvents) {
-    const aset = await db.getAsetByCode(event.description);
+    const { apktcode } = parseAlarmDescription(event.description);
+    const aset = await db.getAsetByCode(apktcode);
     if (!aset) {
-      console.warn(`[POLLER] No aset for pemeliharaan event id=${event.id}: ${event.description}`);
+      console.warn(`[POLLER] No aset for pemeliharaan event id=${event.id}: ${apktcode}`);
       continue;
     }
 
     try {
       const message = msg.buildPadamPemeliharaan(event, aset);
       await db.createNotifLog({
-        description: event.description,
+        description: apktcode,
         type: 'pemeliharaan',
         event_id_open: event.id,
         time_off: event.timestamp,
       });
       await wa.sendMessage(message);
-      console.log(`[POLLER] Sent PEMELIHARAAN notif: ${event.description}`);
+      console.log(`[POLLER] Sent PEMELIHARAAN notif: ${apktcode}`);
     } catch (err) {
       console.error(`[POLLER] Error processing pemeliharaan event id=${event.id}:`, err);
     }
@@ -43,42 +43,36 @@ async function processGangguanEvents(events: ScadaEvent[]): Promise<void> {
   const tripEvents = events.filter((e) => isGangguanEvent(e.message));
 
   for (const tripEvent of tripEvents) {
-    // AMF mungkin datang sebagai event terpisah dengan description yang sama
-    const amfEvent = events.find(
-      (e) =>
-        isAmfEvent(e.message) &&
-        e.description === tripEvent.description &&
-        e.id > tripEvent.id,
-    );
-    const amf = amfEvent ? parseAmfMessage(amfEvent.message) : { amfr: 0, amfs: 0, amft: 0, amfn: 0 };
+    const { apktcode, faultType, amfr, amfs, amft, amfn } = parseAlarmDescription(tripEvent.description);
+    const indikasi = faultType ?? 'TRIP';
 
-    const aset = await db.getAsetByCode(tripEvent.description);
+    const aset = await db.getAsetByCode(apktcode);
     if (!aset) {
-      console.warn(`[POLLER] No aset for gangguan event id=${tripEvent.id}: ${tripEvent.description}`);
+      console.warn(`[POLLER] No aset for gangguan event id=${tripEvent.id}: ${apktcode}`);
       continue;
     }
 
     try {
-      const monthly = await db.getMonthlyFaultCount(tripEvent.description, tripEvent.timestamp);
-      const yearly = await db.getYearlyFaultCount(tripEvent.description, tripEvent.timestamp);
+      const monthly = await db.getMonthlyFaultCount(apktcode, tripEvent.timestamp);
+      const yearly = await db.getYearlyFaultCount(apktcode, tripEvent.timestamp);
       const message = msg.buildPadamGangguan(
-        tripEvent, aset, 'TRIP',
-        amf.amfr, amf.amfs, amf.amft, amf.amfn,
+        tripEvent, aset, indikasi,
+        amfr, amfs, amft, amfn,
         monthly, yearly,
       );
       await db.createNotifLog({
-        description: tripEvent.description,
+        description: apktcode,
         type: 'gangguan',
         event_id_open: tripEvent.id,
-        indikasi: 'TRIP',
-        amfr: amf.amfr,
-        amfs: amf.amfs,
-        amft: amf.amft,
-        amfn: amf.amfn,
+        indikasi,
+        amfr,
+        amfs,
+        amft,
+        amfn,
         time_off: tripEvent.timestamp,
       });
       await wa.sendMessage(message);
-      console.log(`[POLLER] Sent GANGGUAN notif: ${tripEvent.description}`);
+      console.log(`[POLLER] Sent GANGGUAN notif: ${apktcode}`);
     } catch (err) {
       console.error(`[POLLER] Error processing gangguan event id=${tripEvent.id}:`, err);
     }
@@ -89,15 +83,16 @@ async function processCloseEvents(events: ScadaEvent[]): Promise<void> {
   const closeEvents = events.filter((e) => isCloseEvent(e.message));
 
   for (const closeEvent of closeEvents) {
-    const log = await db.getOpenNotifLog(closeEvent.description);
+    const { apktcode } = parseAlarmDescription(closeEvent.description);
+    const log = await db.getOpenNotifLog(apktcode);
     if (!log) {
-      console.warn(`[POLLER] No open notif_log for close event id=${closeEvent.id} (${closeEvent.description})`);
+      console.warn(`[POLLER] No open notif_log for close event id=${closeEvent.id} (${apktcode})`);
       continue;
     }
 
-    const aset = await db.getAsetByCode(closeEvent.description);
+    const aset = await db.getAsetByCode(apktcode);
     if (!aset) {
-      console.warn(`[POLLER] No aset for close event: ${closeEvent.description}`);
+      console.warn(`[POLLER] No aset for close event: ${apktcode}`);
       continue;
     }
 
@@ -106,8 +101,8 @@ async function processCloseEvents(events: ScadaEvent[]): Promise<void> {
     try {
       let message: string;
       if (log.type === 'gangguan') {
-        const monthly = await db.getMonthlyFaultCount(closeEvent.description, log.time_off);
-        const yearly = await db.getYearlyFaultCount(closeEvent.description, log.time_off);
+        const monthly = await db.getMonthlyFaultCount(apktcode, log.time_off);
+        const yearly = await db.getYearlyFaultCount(apktcode, log.time_off);
         message = msg.buildPenormalanGangguan(closeEvent, log, aset, monthly, yearly);
       } else {
         message = msg.buildPenormalanPemeliharaan(closeEvent, log, aset);
@@ -115,7 +110,7 @@ async function processCloseEvents(events: ScadaEvent[]): Promise<void> {
 
       await db.closeNotifLog(log.id, closeEvent.id, closeEvent.timestamp);
       await wa.sendMessage(message);
-      console.log(`[POLLER] Sent PENORMALAN notif: ${closeEvent.description}`);
+      console.log(`[POLLER] Sent PENORMALAN notif: ${apktcode}`);
     } catch (err) {
       console.error(`[POLLER] Error processing close event id=${closeEvent.id}:`, err);
     }

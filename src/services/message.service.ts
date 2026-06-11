@@ -17,10 +17,10 @@ function asetBlock(eventId: number, event: ScadaEvent, aset: Aset): string {
     `Event Id    : ${eventId}`,
     `UP3         : ${aset.up3}`,
     `ULP         : ${aset.ulp}`,
-    `Name        : ${aset.name}`,
-    `Type        : ${aset.type}`,
-    `Zona        : ${aset.zona}`,
-    `Section     : ${aset.section || '-'}`,
+    `Name        : ${aset.nama}`,
+    `Type        : ${aset.aset}`,
+    `Zona        : ${aset.zona ?? '-'}`,
+    `Section     : ${aset.section ?? '-'}`,
     `Event       : ${event.message}`,
     `Time        : ${formatDateTime(event.timestamp)}`,
   ].join('\n');
@@ -52,7 +52,7 @@ export function buildPadamGangguan(
     LINE,
     `Frekuensi gangguan bulanan  : ${monthlyCount}`,
     `Frekuensi gangguan tahunan  : ${yearlyCount}`,
-    `Load (kW)   : ${aset.load}`,
+    `Load (kW)   : ${aset.beban}`,
     `Pelanggan   : ${aset.pelanggan}`,
   ].join('\n');
 }
@@ -65,7 +65,7 @@ export function buildPadamPemeliharaan(event: ScadaEvent, aset: Aset): string {
     LINE,
     asetBlock(event.id, event, aset),
     LINE,
-    `Load (kW)   : ${aset.load}`,
+    `Load (kW)   : ${aset.beban}`,
     `Pelanggan   : ${aset.pelanggan}`,
   ].join('\n');
 }
@@ -89,10 +89,10 @@ export function buildPenormalanGangguan(
     `Event Id    : ${log.event_id_open}`,
     `UP3         : ${aset.up3}`,
     `ULP         : ${aset.ulp}`,
-    `Name        : ${aset.name}`,
-    `Type        : ${aset.type}`,
-    `Zona        : ${aset.zona}`,
-    `Section     : ${aset.section || '-'}`,
+    `Name        : ${aset.nama}`,
+    `Type        : ${aset.aset}`,
+    `Zona        : ${aset.zona ?? '-'}`,
+    `Section     : ${aset.section ?? '-'}`,
     `Event       : ${closeEvent.message}`,
     `Time Off    : ${formatDateTime(log.time_off)}`,
     `Time On     : ${formatDateTime(closeEvent.timestamp)}`,
@@ -106,7 +106,7 @@ export function buildPenormalanGangguan(
     LINE,
     `Frekuensi gangguan bulanan  : ${monthlyCount}`,
     `Frekuensi gangguan tahunan  : ${yearlyCount}`,
-    `Load (kW)   : ${aset.load}`,
+    `Load (kW)   : ${aset.beban}`,
     `Pelanggan   : ${aset.pelanggan}`,
   ].join('\n');
 }
@@ -128,16 +128,16 @@ export function buildPenormalanPemeliharaan(
     `Event Id    : ${log.event_id_open}`,
     `UP3         : ${aset.up3}`,
     `ULP         : ${aset.ulp}`,
-    `Name        : ${aset.name}`,
-    `Type        : ${aset.type}`,
-    `Zona        : ${aset.zona}`,
-    `Section     : ${aset.section || '-'}`,
+    `Name        : ${aset.nama}`,
+    `Type        : ${aset.aset}`,
+    `Zona        : ${aset.zona ?? '-'}`,
+    `Section     : ${aset.section ?? '-'}`,
     `Event       : ${closeEvent.message}`,
     `Time Off    : ${formatDateTime(log.time_off)}`,
     `Time On     : ${formatDateTime(closeEvent.timestamp)}`,
     `Duration    : ${duration}`,
     LINE,
-    `Load (kW)   : ${aset.load}`,
+    `Load (kW)   : ${aset.beban}`,
     `Pelanggan   : ${aset.pelanggan}`,
   ].join('\n');
 }

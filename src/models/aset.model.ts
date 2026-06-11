@@ -1,14 +1,13 @@
 export interface Aset {
   id: number;
-  code: string;       // 42.GISKY.F01.Z01
-  up3: string;        // JAYAPURA
-  ulp: string;        // ABEPURA
-  source: string;     // GI SKYLINE
-  name: string;       // GARUDA
-  zona: string;       // 01
-  section: string;    // 00
-  type: string;       // FEEDER
-  unit: string;       // CB
-  load: number;       // kW
-  pelanggan: number;
+  apktcode: string;      // 42.KOTA1.F01.Z01
+  up3: string;           // NABIRE
+  ulp: string;           // NABIRE KOTA
+  aset: string;          // FEEDER / ZONA / SECTION
+  nama: string;          // FEEDER MERBAU
+  feeder: string;        // MERBAU
+  zona: string | null;   // 1, 2
+  section: string | null; // 1, MNV1
+  beban: string | null;  // kW
+  pelanggan: string | null;
 }
