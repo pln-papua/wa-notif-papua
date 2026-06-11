@@ -33,7 +33,7 @@ CREATE TABLE IF NOT EXISTS aset (
 --   description VARCHAR(200),
 --   value       INT,
 --   event       VARCHAR(100),
---   timestamp   DATETIME(3)
+--   processtime DATETIME(3)
 --   -- ... kolom lain diisi SCADA
 -- );
 

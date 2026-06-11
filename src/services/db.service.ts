@@ -23,7 +23,7 @@ export async function advancePollerLastId(lastId: number): Promise<void> {
 
 export async function getEventsSinceId(lastId: number): Promise<ScadaEvent[]> {
   const [rows] = await pool.execute<RowDataPacket[]>(
-    `SELECT id, description, event AS message, timestamp
+    `SELECT id, description, event AS message, processtime AS timestamp
      FROM scada_alarm
      WHERE id > ?
      ORDER BY id ASC
