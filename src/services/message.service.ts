@@ -7,7 +7,7 @@ const SEP = '==============================';
 const LINE = '--------------------------------------------------';
 
 function header(date: Date): string {
-  return `NOTIFIKASI SISTEM SCADA\n${SEP}\n${formatTanggal(date)} ${
+  return `*NOTIFIKASI SISTEM SCADA P2B*\n${SEP}\n${formatTanggal(date)} ${
     date.toTimeString().slice(0, 8)
   }\n${SEP}`;
 }
@@ -40,7 +40,7 @@ export function buildPadamGangguan(
   console.log(`[MSG] Build padam gangguan — event_id=${event.id} desc=${event.description} up3=${aset.up3} indikasi=${indikasi} amf=${amfr}/${amfs}/${amft}/${amfn}`);
   return [
     header(event.timestamp),
-    'Info padam gangguan',
+    '🔴 *Info padam gangguan*',
     LINE,
     asetBlock(event.id, event, aset),
     LINE,
@@ -61,7 +61,7 @@ export function buildPadamPemeliharaan(event: ScadaEvent, aset: Aset): string {
   console.log(`[MSG] Build padam pemeliharaan — event_id=${event.id} desc=${event.description} up3=${aset.up3}`);
   return [
     header(event.timestamp),
-    'Info padam manuver/ pemeliharaan',
+    '🔧 *Info padam manuver/ pemeliharaan*',
     LINE,
     asetBlock(event.id, event, aset),
     LINE,
@@ -84,7 +84,7 @@ export function buildPenormalanGangguan(
   console.log(`[MSG] Build penormalan gangguan — event_id=${closeEvent.id} desc=${closeEvent.description} up3=${aset.up3} durasi=${duration}`);
   return [
     header(closeEvent.timestamp),
-    'Info penormalan gangguan',
+    '✅ *Info penormalan gangguan*',
     LINE,
     `Event Id    : ${log.event_id_open}`,
     `UP3         : ${aset.up3}`,
@@ -123,7 +123,7 @@ export function buildPenormalanPemeliharaan(
   console.log(`[MSG] Build penormalan pemeliharaan — event_id=${closeEvent.id} desc=${closeEvent.description} up3=${aset.up3} durasi=${duration}`);
   return [
     header(closeEvent.timestamp),
-    'Info penormalan manuver/ pemeliharaan',
+    '✅ *Info penormalan manuver/ pemeliharaan*',
     LINE,
     `Event Id    : ${log.event_id_open}`,
     `UP3         : ${aset.up3}`,
@@ -155,7 +155,7 @@ export function buildRekapGangguan(
   console.log(`[MSG] Build rekap gangguan H-1 — up3=${up3} tanggal=${refDate.toLocaleDateString('id-ID')} total=${items.length} event`);
   const lines: string[] = [
     header(sendDate),
-    `Info rekap gangguan H-1`,
+    `📋 *Info rekap gangguan H-1*`,
     `${formatTanggal(refDate).replace(',', '').split(' ')[0] ?? ''}, ${
       refDate.toLocaleDateString('id-ID', { day: '2-digit', month: '2-digit', year: 'numeric' }).replace(/\//g, '/')
     }`,

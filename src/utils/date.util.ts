@@ -39,14 +39,14 @@ export function formatTime(date: Date): string {
 }
 
 export function formatDuration(msec: number): string {
-  const totalSeconds = Math.floor(msec / 1000);
+  const totalSeconds = Math.floor(Math.abs(msec) / 1000);
   const seconds = totalSeconds % 60;
   const totalMinutes = Math.floor(totalSeconds / 60);
   const minutes = totalMinutes % 60;
   const totalHours = Math.floor(totalMinutes / 60);
   const hours = totalHours % 24;
   const days = Math.floor(totalHours / 24);
-  return `${days} hari ${hours} jam ${minutes} menit ${seconds} detik`;
+  return `${days} hari:${hours} jam:${minutes} menit:${seconds} detik`;
 }
 
 export function getYesterdayRange(): { start: Date; end: Date } {
