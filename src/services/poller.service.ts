@@ -58,14 +58,6 @@ async function processGangguanEvents(events: ScadaEvent[]): Promise<void> {
     }
 
     try {
-      const monthly = await db.getMonthlyFaultCount(apktcode, tripEvent.timestamp);
-      const yearly = await db.getYearlyFaultCount(apktcode, tripEvent.timestamp);
-      const message = msg.buildPadamGangguan(
-        tripEvent, aset, indikasi,
-        amfr, amfs, amft, amfn,
-        monthly, yearly,
-      );
-      console.log(`[POLLER][DEBUG] GANGGUAN message:\n${message}`);
       await db.createNotifLog({
         description: apktcode,
         type: 'gangguan',
@@ -77,6 +69,14 @@ async function processGangguanEvents(events: ScadaEvent[]): Promise<void> {
         amfn,
         time_off: tripEvent.timestamp,
       });
+      const monthly = await db.getMonthlyFaultCount(apktcode, tripEvent.timestamp);
+      const yearly = await db.getYearlyFaultCount(apktcode, tripEvent.timestamp);
+      const message = msg.buildPadamGangguan(
+        tripEvent, aset, indikasi,
+        amfr, amfs, amft, amfn,
+        monthly, yearly,
+      );
+      console.log(`[POLLER][DEBUG] GANGGUAN message:\n${message}`);
       await wa.sendMessage(message);
       console.log(`[POLLER] Sent GANGGUAN notif: ${apktcode}`);
     } catch (err) {
