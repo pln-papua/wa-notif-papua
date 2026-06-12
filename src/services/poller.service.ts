@@ -133,19 +133,12 @@ async function pollOnce(): Promise<void> {
     const raw = await db.getEventsSinceId(lastId);
     if (raw.length === 0) return;
 
-    const settleThreshold = new Date(Date.now() - config.polling.settlingSeconds * 1000);
-    console.log(`[POLLER][DEBUG] now=${new Date().toISOString()} settleThreshold=${settleThreshold.toISOString()} settlingSeconds=${config.polling.settlingSeconds}`);
-    raw.forEach((e) => console.log(`[POLLER][DEBUG]  settle check id=${e.id} ts=${e.timestamp instanceof Date ? e.timestamp.toISOString() : e.timestamp} pass=${e.timestamp <= settleThreshold}`));
-    const events = raw.filter((e) => e.timestamp <= settleThreshold);
-    console.log(`[POLLER][DEBUG] after settle filter: ${events.length}/${raw.length} event(s) passed`);
-    if (events.length === 0) return;
+    console.log(`[POLLER] Processing ${raw.length} event(s) since id=${lastId}...`);
+    try { await processPemeliharaanEvents(raw); } catch (err) { console.error('[POLLER] processPemeliharaanEvents fatal:', err); }
+    try { await processGangguanEvents(raw); } catch (err) { console.error('[POLLER] processGangguanEvents fatal:', err); }
+    try { await processCloseEvents(raw); } catch (err) { console.error('[POLLER] processCloseEvents fatal:', err); }
 
-    console.log(`[POLLER] Processing ${events.length} event(s) since id=${lastId}...`);
-    try { await processPemeliharaanEvents(events); } catch (err) { console.error('[POLLER] processPemeliharaanEvents fatal:', err); }
-    try { await processGangguanEvents(events); } catch (err) { console.error('[POLLER] processGangguanEvents fatal:', err); }
-    try { await processCloseEvents(events); } catch (err) { console.error('[POLLER] processCloseEvents fatal:', err); }
-
-    const maxId = events[events.length - 1]!.id;
+    const maxId = raw[raw.length - 1]!.id;
     await db.advancePollerLastId(maxId);
     console.log(`[POLLER] Counter advanced to id=${maxId}`);
   } catch (err) {
@@ -159,7 +152,7 @@ let intervalHandle: ReturnType<typeof setInterval> | null = null;
 
 export function startPoller(): void {
   if (intervalHandle) return;
-  console.log(`[POLLER] Starting with interval=${config.polling.intervalMs}ms, settling=${config.polling.settlingSeconds}s`);
+  console.log(`[POLLER] Starting with interval=${config.polling.intervalMs}ms`);
   intervalHandle = setInterval(() => {
     pollOnce().catch((err) => console.error('[POLLER] pollOnce error:', err));
   }, config.polling.intervalMs);

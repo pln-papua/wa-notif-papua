@@ -18,7 +18,6 @@ export const config = {
     numberTargets: (process.env.WA_NUMBER_TARGETS ?? '').split(',').map((t) => t.trim()).filter(Boolean),
   },
   polling: {
-    intervalMs: parseInt(process.env.POLLING_INTERVAL_MS ?? '5000'),
-    settlingSeconds: parseInt(process.env.SETTLING_SECONDS ?? '15'),
+    intervalMs: parseInt(process.env.POLLING_INTERVAL_MS ?? '30000'),
   },
 };
