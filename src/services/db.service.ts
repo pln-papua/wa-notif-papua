@@ -127,7 +127,7 @@ export async function getGangguanByDateAndUp3(
 ): Promise<NotifLog[]> {
   const [rows] = await pool.execute<RowDataPacket[]>(
     `SELECT nl.*, a.up3, a.ulp, a.nama AS name, a.aset AS aset_type, a.zona, a.section,
-            a.beban AS load, a.pelanggan
+            a.beban AS \`load\`, a.pelanggan
      FROM notif_log nl
      JOIN aset a ON a.apktcode = nl.description
      WHERE a.up3 = ?
