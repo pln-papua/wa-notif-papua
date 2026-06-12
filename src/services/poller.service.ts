@@ -134,7 +134,10 @@ async function pollOnce(): Promise<void> {
     if (raw.length === 0) return;
 
     const settleThreshold = new Date(Date.now() - config.polling.settlingSeconds * 1000);
+    console.log(`[POLLER][DEBUG] now=${new Date().toISOString()} settleThreshold=${settleThreshold.toISOString()} settlingSeconds=${config.polling.settlingSeconds}`);
+    raw.forEach((e) => console.log(`[POLLER][DEBUG]  settle check id=${e.id} ts=${e.timestamp instanceof Date ? e.timestamp.toISOString() : e.timestamp} pass=${e.timestamp <= settleThreshold}`));
     const events = raw.filter((e) => e.timestamp <= settleThreshold);
+    console.log(`[POLLER][DEBUG] after settle filter: ${events.length}/${raw.length} event(s) passed`);
     if (events.length === 0) return;
 
     console.log(`[POLLER] Processing ${events.length} event(s) since id=${lastId}...`);
