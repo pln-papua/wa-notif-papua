@@ -141,9 +141,9 @@ async function pollOnce(): Promise<void> {
     if (events.length === 0) return;
 
     console.log(`[POLLER] Processing ${events.length} event(s) since id=${lastId}...`);
-    await processPemeliharaanEvents(events);
-    await processGangguanEvents(events);
-    await processCloseEvents(events);
+    try { await processPemeliharaanEvents(events); } catch (err) { console.error('[POLLER] processPemeliharaanEvents fatal:', err); }
+    try { await processGangguanEvents(events); } catch (err) { console.error('[POLLER] processGangguanEvents fatal:', err); }
+    try { await processCloseEvents(events); } catch (err) { console.error('[POLLER] processCloseEvents fatal:', err); }
 
     const maxId = events[events.length - 1]!.id;
     await db.advancePollerLastId(maxId);
