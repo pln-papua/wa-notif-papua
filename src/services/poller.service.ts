@@ -14,6 +14,8 @@ let isRunning = false;
 
 async function processPemeliharaanEvents(events: ScadaEvent[]): Promise<void> {
   const pemEvents = events.filter((e) => isPemeliharaanEvent(e.message));
+  console.log(`[POLLER][DEBUG] processPemeliharaanEvents: total=${pemEvents.length}`);
+  pemEvents.forEach((e) => console.log(`[POLLER][DEBUG]  PEM id=${e.id} msg=${e.message} desc=${e.description} ts=${e.timestamp}`));
 
   for (const event of pemEvents) {
     const { apktcode } = parseAlarmDescription(event.description);
@@ -25,6 +27,7 @@ async function processPemeliharaanEvents(events: ScadaEvent[]): Promise<void> {
 
     try {
       const message = msg.buildPadamPemeliharaan(event, aset);
+      console.log(`[POLLER][DEBUG] PEM message:\n${message}`);
       await db.createNotifLog({
         description: apktcode,
         type: 'pemeliharaan',
@@ -41,6 +44,8 @@ async function processPemeliharaanEvents(events: ScadaEvent[]): Promise<void> {
 
 async function processGangguanEvents(events: ScadaEvent[]): Promise<void> {
   const tripEvents = events.filter((e) => isGangguanEvent(e.message));
+  console.log(`[POLLER][DEBUG] processGangguanEvents: total=${tripEvents.length}`);
+  tripEvents.forEach((e) => console.log(`[POLLER][DEBUG]  TRIP id=${e.id} msg=${e.message} desc=${e.description} ts=${e.timestamp}`));
 
   for (const tripEvent of tripEvents) {
     const { apktcode, faultType, amfr, amfs, amft, amfn } = parseAlarmDescription(tripEvent.description);
@@ -60,6 +65,7 @@ async function processGangguanEvents(events: ScadaEvent[]): Promise<void> {
         amfr, amfs, amft, amfn,
         monthly, yearly,
       );
+      console.log(`[POLLER][DEBUG] GANGGUAN message:\n${message}`);
       await db.createNotifLog({
         description: apktcode,
         type: 'gangguan',
@@ -108,6 +114,7 @@ async function processCloseEvents(events: ScadaEvent[]): Promise<void> {
         message = msg.buildPenormalanPemeliharaan(closeEvent, log, aset);
       }
 
+      console.log(`[POLLER][DEBUG] PENORMALAN message:\n${message}`);
       await db.closeNotifLog(log.id, closeEvent.id, closeEvent.timestamp);
       await wa.sendMessage(message);
       console.log(`[POLLER] Sent PENORMALAN notif: ${apktcode}`);
