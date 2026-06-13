@@ -9,7 +9,7 @@ export const pool = mysql.createPool({
   database: config.db.database,
   waitForConnections: true,
   connectionLimit: 10,
-  timezone: '+07:00',
+  timezone: '+09:00',
 });
 
 export async function testConnection(): Promise<void> {
