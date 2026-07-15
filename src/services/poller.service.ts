@@ -1,6 +1,6 @@
 import { config } from '../config/env';
 import * as db from './db.service';
-import * as wa from './wablas.service';
+import * as wa from './whacenter.service';
 import * as msg from './message.service';
 import {
   isPemeliharaanEvent,
@@ -34,7 +34,7 @@ async function processPemeliharaanEvents(events: ScadaEvent[]): Promise<void> {
         event_id_open: event.id,
         time_off: event.timestamp,
       });
-      await wa.sendMessage(message);
+      await wa.sendMessage(message, aset.up3);
       console.log(`[POLLER] Sent PEMELIHARAAN notif: ${apktcode}`);
     } catch (err) {
       console.error(`[POLLER] Error processing pemeliharaan event id=${event.id}:`, err);
@@ -77,7 +77,7 @@ async function processGangguanEvents(events: ScadaEvent[]): Promise<void> {
         monthly, yearly,
       );
       console.log(`[POLLER][DEBUG] GANGGUAN message:\n${message}`);
-      await wa.sendMessage(message);
+      await wa.sendMessage(message, aset.up3);
       console.log(`[POLLER] Sent GANGGUAN notif: ${apktcode}`);
     } catch (err) {
       console.error(`[POLLER] Error processing gangguan event id=${tripEvent.id}:`, err);
@@ -116,7 +116,7 @@ async function processCloseEvents(events: ScadaEvent[]): Promise<void> {
 
       console.log(`[POLLER][DEBUG] PENORMALAN message:\n${message}`);
       await db.closeNotifLog(log.id, closeEvent.id, closeEvent.timestamp);
-      await wa.sendMessage(message);
+      await wa.sendMessage(message, aset.up3);
       console.log(`[POLLER] Sent PENORMALAN notif: ${apktcode}`);
     } catch (err) {
       console.error(`[POLLER] Error processing close event id=${closeEvent.id}:`, err);

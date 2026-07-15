@@ -10,13 +10,13 @@ Sistem notifikasi WhatsApp realtime untuk pemadaman listrik di **PLN UIW Papua &
 - Informasi arus gangguan (AMFR, AMFS, AMFT, AMFN) dari event AMF
 - Frekuensi gangguan bulanan & tahunan per PMT/CB
 - Rekap harian gangguan H-1 per UP3 (cron 00:01 WIT)
-- Pengiriman ke grup & nomor WhatsApp via Wablas API
+- Pengiriman ke grup & nomor WhatsApp via WHA Center API
 
 ## Prasyarat
 
 - Node.js >= 18
 - MySQL / MariaDB
-- Akun Wablas dengan token aktif
+- Akun WHA Center dengan device aktif
 - PM2 (untuk production): `npm install -g pm2`
 
 ## Instalasi
@@ -51,14 +51,16 @@ DB_NAME=scada_history
 POLLING_INTERVAL_MS=5000    # interval cek event (ms)
 SETTLING_SECONDS=15         # tunggu N detik sebelum proses event
 
-# Wablas
-WABLAS_TOKEN=your_token
-WABLAS_BASE_URL=https://my.wablas.com
+# WHA Center — device_id per region UP3
+WHACENTER_DEVICE_ID_TIMIKA_BIAK=your_device_id_1
+WHACENTER_DEVICE_ID_MANOKWARI_NABIRE=your_device_id_2
+WHACENTER_DEVICE_ID_SORONG_FAKFAK=your_device_id_3
+WHACENTER_DEVICE_ID_JAYAPURA_WAMENA=your_device_id_4
+WHACENTER_BASE_URL=https://api.whacenter.com
 
-# Target WA — pisahkan dengan koma
-# Grup: gunakan group ID format xxxx@g.us
-# Individu: gunakan nomor format 628xxxxxxxxxx
-WA_TARGETS=628xxxxxxxxxx@g.us,628xxxxxxxxxx
+# Target WA — pisahkan dengan koma (sama untuk semua device_id)
+WA_GROUP_TARGETS=your_whacenter_group_id_here
+WA_NUMBER_TARGETS=628xxxxxxxxxx
 ```
 
 ## Setup Database
@@ -213,7 +215,7 @@ SCADA (Powerscene)
       │ klasifikasi OPEN → gangguan / pemeliharaan
       │ korelasi CLOSE ← notif_log
       ▼
- message.service.ts ──► wablas.service.ts ──► WhatsApp Group
+ message.service.ts ──► whacenter.service.ts ──► WhatsApp Group
       │
       ▼
   [notif_log table]
@@ -242,7 +244,7 @@ wa-notif-papua/
 │   │   └── notif-log.model.ts  # Tipe log notifikasi
 │   ├── services/
 │   │   ├── db.service.ts       # Semua query MySQL
-│   │   ├── wablas.service.ts   # Kirim pesan Wablas
+│   │   ├── whacenter.service.ts # Kirim pesan WHA Center
 │   │   ├── message.service.ts  # Format pesan WA
 │   │   └── poller.service.ts   # Loop polling event
 │   ├── scheduler/

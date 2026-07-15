@@ -1,6 +1,6 @@
 import cron from 'node-cron';
 import * as db from '../services/db.service';
-import * as wa from '../services/wablas.service';
+import * as wa from '../services/whacenter.service';
 import { buildRekapGangguan } from '../services/message.service';
 import { getYesterdayRange } from '../utils/date.util';
 import type { NotifLog } from '../models/notif-log.model';
@@ -41,7 +41,7 @@ async function sendDailyRecap(): Promise<void> {
     const message = buildRekapGangguan(up3, start, sendDate, items);
 
     try {
-      await wa.sendMessage(message);
+      await wa.sendMessage(message, up3);
       console.log(`[RECAP] Sent H-1 recap for UP3 ${up3}: ${logs.length} event(s)`);
     } catch (err) {
       console.error(`[RECAP] Failed to send recap for ${up3}:`, err);

@@ -7,7 +7,7 @@ Sistem notifikasi WhatsApp realtime untuk pemadaman listrik di PLN UIW Papua & P
 - **Runtime**: Node.js + TypeScript (strict)
 - **Framework**: Express
 - **Database**: MySQL / MariaDB (`mysql2/promise`, connection pool)
-- **WA Broker**: Wablas API V1 (token+secret, form-encoded, support grup & nomor)
+- **WA Broker**: WHA Center API (device_id, JSON body, support grup & nomor)
 - **Scheduler**: `node-cron` (rekap H-1 setiap 00:01 WIT)
 - **Polling**: `setInterval` baca tabel `event` tiap N detik, posisi baca via `poller_state`
 - **Process manager**: PM2 (`ecosystem.config.js`)
@@ -31,7 +31,7 @@ npm run pm2:logs   # lihat log realtime
 | `src/services/poller.service.ts` | Loop polling event SCADA, klasifikasi gangguan vs pemeliharaan |
 | `src/services/message.service.ts` | Format semua tipe pesan WA (padam, penormalan, rekap) |
 | `src/services/db.service.ts` | Semua query MySQL |
-| `src/services/wablas.service.ts` | Kirim pesan ke Wablas API |
+| `src/services/whacenter.service.ts` | Kirim pesan ke WHA Center API |
 | `src/scheduler/recap.scheduler.ts` | Cron rekap gangguan H-1 per UP3 |
 | `src/utils/date.util.ts` | Format tanggal Indonesia, hitung durasi padam |
 | `database/schema.sql` | DDL tabel `event`, `aset`, `notif_log`, `poller_state` |
@@ -85,12 +85,14 @@ Prefix `42` = kode UIW. `GISKY` = nama GI/sumber. `F01` = feeder. `Z01` = zona. 
 | CB/PMCB/LBS/REC **CLOSE** (pasangan pemeliharaan) | `buildPenormalanPemeliharaan()` |
 | Cron 00:01 WIT | `buildRekapGangguan()` per UP3 |
 
-## Wablas API
+## WHA Center API
 
-- Endpoint: `POST {baseUrl}/api/send-message` (sama untuk grup dan nomor individu)
-- Auth header: `Authorization: {WABLAS_TOKEN}.{WABLAS_SECRET_KEY}`
-- Body: `application/x-www-form-urlencoded`
-- Grup: tambah parameter `isGroup=true`; group ID didapat dari menu Inbox Wablas
+- Grup: `POST {baseUrl}/api/sendGroup` — body: `device_id, number (diisi group id), message, file, schedule`
+- Nomor individu: `POST {baseUrl}/api/send` — body: `device_id, number, message, file, schedule`
+- Body: JSON; `file` dan `schedule` selalu dikirim `null` (tidak dipakai)
+- Tidak ada header auth terpisah — `device_id` berfungsi sebagai identitas pengirim
+- Response: `{ Status: boolean, Data: { message_id }, Message: string }`
+- Ada 4 device_id, satu per pasangan region UP3 (Timika&Biak, Manokwari&Nabire, Sorong&Fakfak, Jayapura&Wamena). `sendMessage(message, up3)` memilih device_id lewat `deviceIdByUp3` di `env.ts` berdasarkan `up3` dari aset; target grup/nomor tetap sama untuk semua device_id.
 
 ## Environment variables
 
@@ -98,8 +100,10 @@ Salin `.env.example` → `.env`. Variabel wajib:
 
 ```
 DB_HOST, DB_PORT, DB_USER, DB_PASSWORD, DB_NAME
-WABLAS_TOKEN, WABLAS_SECRET_KEY, WABLAS_BASE_URL
-WA_GROUP_TARGETS   — comma-separated group ID dari Inbox Wablas
+WHACENTER_DEVICE_ID_TIMIKA_BIAK, WHACENTER_DEVICE_ID_MANOKWARI_NABIRE
+WHACENTER_DEVICE_ID_SORONG_FAKFAK, WHACENTER_DEVICE_ID_JAYAPURA_WAMENA
+WHACENTER_BASE_URL
+WA_GROUP_TARGETS   — comma-separated group id WHA Center (dikirim via field "number")
 WA_NUMBER_TARGETS  — comma-separated nomor individu (628xxxxxxxxxx)
 ```
 
