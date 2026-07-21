@@ -43,10 +43,12 @@ async function send(deviceId: string, target: string, message: string, isGroup: 
 
 export async function sendMessage(message: string, up3: string): Promise<void> {
   const deviceId = resolveDeviceId(up3);
-  const { groupTargets, numberTargets } = config.whaCenter;
+  const key = up3.trim().toUpperCase();
+  const groupTargets = config.whaCenter.groupTargetsByUp3[key] ?? [];
+  const numberTargets = config.whaCenter.numberTargetsByUp3[key] ?? [];
 
   if (groupTargets.length === 0 && numberTargets.length === 0) {
-    console.warn('[WHACENTER] No targets configured, skipping send');
+    console.warn(`[WHACENTER] No targets configured for UP3 "${up3}", skipping send`);
     return;
   }
 

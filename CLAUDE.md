@@ -92,7 +92,9 @@ Prefix `42` = kode UIW. `GISKY` = nama GI/sumber. `F01` = feeder. `Z01` = zona. 
 - Body: JSON; `file` dan `schedule` selalu dikirim `null` (tidak dipakai)
 - Tidak ada header auth terpisah — `device_id` berfungsi sebagai identitas pengirim
 - Response: `{ Status: boolean, Data: { message_id }, Message: string }`
-- Ada 4 device_id, satu per pasangan region UP3 (Timika&Biak, Manokwari&Nabire, Sorong&Fakfak, Jayapura&Wamena). `sendMessage(message, up3)` memilih device_id lewat `deviceIdByUp3` di `env.ts` berdasarkan `up3` dari aset; target grup/nomor tetap sama untuk semua device_id.
+- Ada 4 device_id, satu per pasangan region UP3 (Timika&Biak, Manokwari&Nabire, Sorong&Fakfak, Jayapura&Wamena), dipetakan di `deviceIdByUp3` (`env.ts`).
+- Tiap 1 dari 8 UP3 (Timika, Biak, Manokwari, Nabire, Sorong, Fakfak, Jayapura, Wamena) punya target grup & nomor **sendiri-sendiri** (`groupTargetsByUp3`, `numberTargetsByUp3` di `env.ts`) — bukan target bersama.
+- `sendMessage(message, up3)` di `whacenter.service.ts` menentukan `device_id` dari pasangan region UP3, lalu mengirim ke target grup/nomor milik UP3 tersebut saja (bukan broadcast ke semua UP3).
 
 ## Environment variables
 
@@ -103,8 +105,8 @@ DB_HOST, DB_PORT, DB_USER, DB_PASSWORD, DB_NAME
 WHACENTER_DEVICE_ID_TIMIKA_BIAK, WHACENTER_DEVICE_ID_MANOKWARI_NABIRE
 WHACENTER_DEVICE_ID_SORONG_FAKFAK, WHACENTER_DEVICE_ID_JAYAPURA_WAMENA
 WHACENTER_BASE_URL
-WA_GROUP_TARGETS   — comma-separated group id WHA Center (dikirim via field "number")
-WA_NUMBER_TARGETS  — comma-separated nomor individu (628xxxxxxxxxx)
+WA_GROUP_TARGETS_<UP3>   — per UP3 (TIMIKA, BIAK, MANOKWARI, NABIRE, SORONG, FAKFAK, JAYAPURA, WAMENA), comma-separated group id
+WA_NUMBER_TARGETS_<UP3>  — per UP3, comma-separated nomor individu (628xxxxxxxxxx)
 ```
 
 ## Konvensi kode
