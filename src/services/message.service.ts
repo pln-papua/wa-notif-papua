@@ -151,6 +151,7 @@ export function buildRekapGangguan(
     monthlyCount: number;
     yearlyCount: number;
   }>,
+  up3Totals?: { monthlyCount: number; yearlyCount: number; totalLoad: number; totalPelanggan: number },
 ): string {
   console.log(`[MSG] Build rekap gangguan H-1 — up3=${up3} tanggal=${refDate.toLocaleDateString('id-ID')} total=${items.length} event`);
   const lines: string[] = [
@@ -161,6 +162,19 @@ export function buildRekapGangguan(
     }`,
     `UP3 ${up3}`,
   ];
+
+  if (items.length === 0) {
+    lines.push(
+      LINE,
+      '-',
+      LINE,
+      `Frekuensi gangguan bulanan  : ${up3Totals?.monthlyCount ?? 0}`,
+      `Frekuensi gangguan tahunan  : ${up3Totals?.yearlyCount ?? 0}`,
+      `Load (kW)   : ${up3Totals?.totalLoad ?? 0}`,
+      `Pelanggan   : ${up3Totals?.totalPelanggan ?? 0}`,
+    );
+    return lines.join('\n');
+  }
 
   for (const item of items) {
     const { log } = item;

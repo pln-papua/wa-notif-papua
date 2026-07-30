@@ -18,9 +18,16 @@ async function sendDailyRecap(): Promise<void> {
   for (const up3 of up3List) {
     const logs = await db.getGangguanByDateAndUp3(up3, start, end);
 
+    let up3Totals: { monthlyCount: number; yearlyCount: number; totalLoad: number; totalPelanggan: number } | undefined;
+
     if (logs.length === 0) {
-      console.log(`[RECAP] No gangguan for ${up3} on H-1, skipping`);
-      continue;
+      console.log(`[RECAP] No gangguan for ${up3} on H-1, sending empty recap with UP3 totals`);
+      const [monthlyCount, yearlyCount, { totalLoad, totalPelanggan }] = await Promise.all([
+        db.getMonthlyFaultCountByUp3(up3, start),
+        db.getYearlyFaultCountByUp3(up3, start),
+        db.getUp3Totals(up3),
+      ]);
+      up3Totals = { monthlyCount, yearlyCount, totalLoad, totalPelanggan };
     }
 
     const items = await Promise.all(
@@ -38,7 +45,7 @@ async function sendDailyRecap(): Promise<void> {
       }),
     );
 
-    const message = buildRekapGangguan(up3, start, sendDate, items);
+    const message = buildRekapGangguan(up3, start, sendDate, items, up3Totals);
 
     try {
       await wa.sendMessage(message, up3);

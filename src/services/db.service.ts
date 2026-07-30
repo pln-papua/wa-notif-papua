@@ -91,6 +91,56 @@ export async function getYearlyFaultCount(description: string, refDate: Date): P
   return cnt;
 }
 
+export async function getMonthlyFaultCountByUp3(up3: string, refDate: Date): Promise<number> {
+  console.log(`[DB] getMonthlyFaultCountByUp3: up3=${up3} refDate=${refDate.toISOString()}`);
+  const t0 = Date.now();
+  const [rows] = await pool.execute<RowDataPacket[]>(
+    `SELECT COUNT(*) AS cnt FROM notif_log nl
+     JOIN aset a ON a.apktcode = nl.description
+     WHERE a.up3 = ?
+       AND nl.type = 'gangguan'
+       AND YEAR(nl.time_off) = YEAR(?)
+       AND MONTH(nl.time_off) = MONTH(?)`,
+    [up3, refDate, refDate],
+  );
+  const cnt = Number((rows[0] as RowDataPacket)['cnt']) ?? 0;
+  console.log(`[DB] getMonthlyFaultCountByUp3 → ${cnt} (${Date.now() - t0}ms)`);
+  return cnt;
+}
+
+export async function getYearlyFaultCountByUp3(up3: string, refDate: Date): Promise<number> {
+  console.log(`[DB] getYearlyFaultCountByUp3: up3=${up3} refDate=${refDate.toISOString()}`);
+  const t0 = Date.now();
+  const [rows] = await pool.execute<RowDataPacket[]>(
+    `SELECT COUNT(*) AS cnt FROM notif_log nl
+     JOIN aset a ON a.apktcode = nl.description
+     WHERE a.up3 = ?
+       AND nl.type = 'gangguan'
+       AND YEAR(nl.time_off) = YEAR(?)`,
+    [up3, refDate],
+  );
+  const cnt = Number((rows[0] as RowDataPacket)['cnt']) ?? 0;
+  console.log(`[DB] getYearlyFaultCountByUp3 → ${cnt} (${Date.now() - t0}ms)`);
+  return cnt;
+}
+
+export async function getUp3Totals(up3: string): Promise<{ totalLoad: number; totalPelanggan: number }> {
+  console.log(`[DB] getUp3Totals: up3=${up3}`);
+  const t0 = Date.now();
+  const [rows] = await pool.execute<RowDataPacket[]>(
+    `SELECT
+       COALESCE(SUM(CAST(beban AS DECIMAL(12,2))), 0) AS totalLoad,
+       COALESCE(SUM(CAST(pelanggan AS DECIMAL(12,2))), 0) AS totalPelanggan
+     FROM aset
+     WHERE up3 = ?`,
+    [up3],
+  );
+  const row = rows[0] as RowDataPacket;
+  const totals = { totalLoad: Number(row['totalLoad']) ?? 0, totalPelanggan: Number(row['totalPelanggan']) ?? 0 };
+  console.log(`[DB] getUp3Totals → load=${totals.totalLoad} pelanggan=${totals.totalPelanggan} (${Date.now() - t0}ms)`);
+  return totals;
+}
+
 export async function createNotifLog(dto: CreateNotifLogDto): Promise<number> {
   console.log(`[DB] createNotifLog: desc=${dto.description} type=${dto.type} event_id_open=${dto.event_id_open} indikasi=${dto.indikasi ?? null} amf=${dto.amfr ?? null}/${dto.amfs ?? null}/${dto.amft ?? null}/${dto.amfn ?? null} time_off=${dto.time_off}`);
   const t0 = Date.now();
